@@ -1,0 +1,30 @@
+class {{ title }}(object):
+    def __init__(self{% for property_name, property in properties.iteritems() %}, {{ property_name }}={{ property.get('default') | py_primitive }}{% endfor %}):
+        self._dct = {{ '{' }}{% for property in properties %}
+            '{{ property }}': {{ property }},{% endfor %}
+        }
+
+    @classmethod
+    def create(cls, dct):
+        obj = cls.__new__(cls)
+        obj._dct = dct
+        return obj
+
+    @classmethod
+    def loads(cls, s):
+        return cls.create(json.loads(s))
+{% for property_name, property in properties.iteritems() %}
+    @property
+    def {{ property_name }}(self):
+        """
+        {% if property.get('type') %}:rtype: {{ property | py_type }}{% endif %}
+        """
+        return {{ property | py_return_value_start }}self._dct['{{ property_name }}']{{ property | py_return_value_end }}
+
+    @{{ property_name }}.setter
+    def {{ property_name }}(self, value):
+        """
+        {% if property.get('type') %}:type value: {{ property | py_type }}{% endif %}
+        """
+        self._dct['{{ property_name }}'] = value
+{% endfor %}
